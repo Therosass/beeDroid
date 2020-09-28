@@ -1,0 +1,140 @@
+public class MainActivity extends Activity
+{
+
+    protected void onCreate(Bundle savedInstanceState)
+    {
+        super.onCreate(savedInstanceState);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        setContentView(new TestSurfaceView(this));
+    }
+
+    public boolean onCreateOptionsMenu(Menu menu)
+    {
+        return false;
+    }
+
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+        return false;
+    }
+
+    private class TestSurfaceView extends GLSurfaceView implements Renderer
+    {
+        private final String vertexShaderCode =
+                "#version 300 es\n\n"+
+                "in vec3 inPosition;\n" +
+                "void main()\n" +
+                "{\n" +
+                " gl_Position = vec4(inPosition.xyz, 1.0);\n" +
+                "}  \n";
+
+        private final String fragmentShaderCode =
+                "#version 300 es\n\n"+
+                "out vec4 outColor;\n"+
+                "void main()\n" +
+                "{\n" +
+                " outColor = vec4(1.0, 0.0, 0.0, 1.0); \n" +
+                "}  \n";
+
+        public TestSurfaceView(Context context)
+        {
+            super(context);
+            super.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
+            setEGLContextClientVersion(3);
+            setRenderer(this);
+            setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
+        }
+
+        public void onDrawFrame(GL10 gl)
+        {
+            glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+            glDrawArraysInstanced(GL_TRIANGLES, 0, 3, 1);
+        }
+
+        public void onSurfaceChanged(GL10 gl, int width, int height)
+        {
+            glViewport(0, 0, width, height);
+        }
+
+        public void onSurfaceCreated(GL10 gl, EGLConfig config)
+        {
+            // States
+
+            glClearColor(0f, 0f, 1f, 0f);                                                           // Set background to blue
+            glEnable(GL_DEPTH_TEST);                                                                // Enable Depth Testing
+            glDepthFunc(GL_LEQUAL);                                                                 // The Type Of Depth Testing To Do //TODO check
+            glEnable(GL_BLEND);                                                                     // Enable Blending
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);                                      // The Type Of Blending To Do (for translucency)
+
+            glEnable(GL_CULL_FACE);
+            glCullFace(GL_BACK);
+            glActiveTexture(0);
+
+            // Shaders
+
+            int vertexShader = glCreateShader(GL_VERTEX_SHADER);
+            glShaderSource(vertexShader, vertexShaderCode);
+            glCompileShader(vertexShader);
+            System.out.println("Vertex shader compile log:\n"+glGetShaderInfoLog(vertexShader));
+
+            int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+            glShaderSource(fragmentShader, fragmentShaderCode);
+            glCompileShader(fragmentShader);
+            System.out.println("Fragment shader compile log:\n"+glGetShaderInfoLog(vertexShader));
+
+            int shaderProgram = glCreateProgram();
+            glAttachShader(shaderProgram, vertexShader);
+            glAttachShader(shaderProgram, fragmentShader);
+
+            glBindAttribLocation(shaderProgram, 0, "inPosition");
+
+            glLinkProgram(shaderProgram);
+            glValidateProgram(shaderProgram);
+            System.out.println("Shader program validate log:\n"+glGetProgramInfoLog(shaderProgram));
+            glUseProgram(shaderProgram);
+
+            // VAO
+
+            float floatSize = Float.SIZE/8;
+            float vertexSize = 3*floatSize;
+
+            int[] arrays = new int[1];
+            glGenVertexArrays(1, arrays, 0);
+            int modelVao = arrays[0];
+            glBindVertexArray(modelVao);
+
+            int[] buffers = new int[3];
+            glGenBuffers(3, buffers, 0);
+
+            int modelVertexVbo = buffers[0];
+            glBindBuffer(GL_ARRAY_BUFFER, modelVertexVbo);
+
+            glBufferData(GL_ARRAY_BUFFER, (int)(vertexSize*3f), null, GL_STATIC_DRAW);
+            glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+            glEnableVertexAttribArray(0);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+            // Triangle
+
+            glBindBuffer(GL_ARRAY_BUFFER, modelVertexVbo);
+            ByteBuffer b = (ByteBuffer)glMapBufferRange(GL_ARRAY_BUFFER, 0, (int)(vertexSize*3), GL_MAP_WRITE_BIT);
+
+            b.putFloat(-1f);
+            b.putFloat(1f);
+            b.putFloat(0f);
+
+            b.putFloat(-1f);
+            b.putFloat(-1f);
+            b.putFloat(0f);
+
+            b.putFloat(1f);
+            b.putFloat(-1f);
+            b.putFloat(0f);
+
+            b.flip();
+            glUnmapBuffer(GL_ARRAY_BUFFER);
+            System.out.println("DONE");
+        }
+    }
+}
