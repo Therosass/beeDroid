@@ -12,11 +12,12 @@ public class Camera {
 
 
         public void setFrustrum(float ratio){
-                Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1, 1, 1, 4);
+                int scale = 5;
+                Matrix.frustumM(projectionMatrix, 0, -ratio/scale, ratio/scale, -1.0f/scale, 1.0f/scale, 1.0f/scale, 25.0f/scale);
         }
 
         public float[] getCamera(){
-                Matrix.setLookAtM(viewMatrix, 0, 0, 0, -3.0f, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
+                Matrix.setLookAtM(viewMatrix, 0, 1.5f, 0.5f, -0.3f, 0f, 0f, -0.3f, 0f, 1.0f, 0.0f);
 
                 Matrix.multiplyMM(vPMatrix, 0, projectionMatrix, 0, viewMatrix, 0);
 
