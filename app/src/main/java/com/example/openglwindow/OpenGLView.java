@@ -15,8 +15,8 @@ public class OpenGLView extends GLSurfaceView {
 
     public void start() {
         try {
-            object[0] = ObjectReader.readFile("ball_base.obj",getContext());
-            object[1] = ObjectReader.readFile("palya_tris.obj",getContext());
+            object[0] = ObjectReader.readFile(R.raw.ball_base,getContext());
+            object[1] = ObjectReader.readFile(R.raw.palya_tris,getContext());
         } catch (FileNotFoundException e) {
             System.out.println("OWO");
         } catch (IOException e) {

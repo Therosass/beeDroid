@@ -48,7 +48,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             Log.d("tag", "no magnetic field");
         }
 
-
         //mMagnetoMeter = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
 //        Toolbar toolbar = findViewById(R.id.toolbar);
 //        setSupportActionBar(toolbar);
@@ -163,25 +162,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 //                ", Roll: "+(float)Math.round(accelerometerReading[2]* 100) / 100);
 
         updateOrientationAngles();
-
     }
 
     // Compute the three orientation angles based on the most recent readings from
     // the device's accelerometer and magnetometer.
     public void updateOrientationAngles() {
         // Update rotation matrix, which is needed to update orientation angles.
-
         SensorManager.getRotationMatrix(rotationMatrix, null,
                 accelerometerReading, magnetometerReading);
 
         // "mRotationMatrix" now has up-to-date information.
-
-
         SensorManager.getOrientation(rotationMatrix, orientationAngles);
 
-//        editBox.setText("Azimuth: "+orientationAngles[0]+
-//                ", Pitch: "+orientationAngles[1]+
-//                ", Roll: "+orientationAngles[2]);
+        editBox.setText("Azimuth: "+orientationAngles[0]+
+                ", Pitch: "+orientationAngles[1]+
+                ", Roll: "+orientationAngles[2]);
         // "mOrientationAngles" now has up-to-date information.
     }
 }

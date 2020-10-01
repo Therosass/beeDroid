@@ -14,16 +14,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ObjectReader{
-    public static File createFile(String filePath, Context context) throws IOException {
-        InputStream fileStream = context.getAssets().open(filePath);
-
-        File tempFile = File.createTempFile("temp_",filePath);
-        tempFile.deleteOnExit();
-        Files.copy(fileStream, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        System.out.println(tempFile.toPath().toString());
-
-        return tempFile;
-    }
 
     public static void parseLine(String line, Object object){
         if(line.charAt(0) == 'v'){
@@ -105,17 +95,17 @@ public class ObjectReader{
         return newFace;
     }
 
-    public static Object readFile(String filePath, Context context) throws IOException {
-        Object newObject = new Object();
+        public static Object readFile(int modelRID, Context context) throws IOException {
+            Object newObject = new Object();
 
-        File file = createFile(filePath, context);
+            InputStream inputStream = context.getResources().openRawResource(modelRID);
 
-        Scanner sc = new Scanner(file);
-        while (sc.hasNextLine()){
-            parseLine(sc.nextLine(),newObject);
+            Scanner sc = new Scanner(inputStream);
+            while (sc.hasNextLine()){
+                parseLine(sc.nextLine(),newObject);
+            }
+
+            return newObject;
         }
-
-        return newObject;
-    }
 }
 
