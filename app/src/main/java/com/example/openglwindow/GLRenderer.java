@@ -13,6 +13,7 @@ import android.opengl.GLES20;
 import android.opengl.GLUtils;
 import android.os.SystemClock;
 import android.renderscript.Matrix4f;
+import android.util.Log;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -65,6 +66,7 @@ public class GLRenderer implements GLSurfaceView.Renderer {
 
     private final String fragmentShaderCode =
             "#version 300 es\n\n"+
+                    "precision mediump float;\n"+
                     "in vec2 v_TexCoordinate;\n"+
                     "uniform sampler2D u_Texture;\n"+
                     "in vec3 outNormal;\n"+
@@ -198,6 +200,9 @@ public class GLRenderer implements GLSurfaceView.Renderer {
     @Override
     public void onSurfaceChanged(GL10 gl, int width, int height) {
         camera.setFrustrum((float) width / height);
+        camera.setCamera(new float[]{1.5f, 0.5f, -0.3f}, new float[]{0f, 0f, 0f});
+
+        String maxVersion = GLES20.glGetString(GLES20.GL_SHADING_LANGUAGE_VERSION);
 
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);
         GLES20.glDepthFunc(GLES20.GL_LEQUAL);
@@ -226,9 +231,13 @@ public class GLRenderer implements GLSurfaceView.Renderer {
             GLES20.glLinkProgram(shaderProgram);
             final int[] linkStatus = new int[1];
             GLES20.glGetProgramiv(shaderProgram, GLES20.GL_LINK_STATUS, linkStatus, 0);
+            System.out.println("Error compiling program: " + GLES20.glGetProgramInfoLog(shaderProgram));
+            Log.d("tag", "Error compiling program: " + GLES20.glGetProgramInfoLog(shaderProgram));
+            Log.d("tag", "Error compiling program: " + GLES20.glGetShaderInfoLog(shaderProgram));
+            Log.d("tag", GLES20.glGetString(GLES20.GL_SHADING_LANGUAGE_VERSION));
             if (linkStatus[0] == 0)
             {
-                System.out.println("Error compiling program: " + GLES20.glGetProgramInfoLog(shaderProgram));
+
                 GLES20.glDeleteProgram(shaderProgram);
                 shaderProgram = 0;
             }
@@ -280,16 +289,16 @@ public class GLRenderer implements GLSurfaceView.Renderer {
     @Override
     public void onDrawFrame(GL10 gl) {
 
-        float timeX = (float) (Math.sin((double) SystemClock.uptimeMillis() / 1000f) + 1) /2;
-        float timeY = (float) (Math.cos((double) SystemClock.uptimeMillis() / 1000f) + 1) /5;
-        float timeZ = (float) (Math.cos((double) SystemClock.uptimeMillis() / 1000f) + 1) /2;
-        float[] newMatrix = {
-                0.2f, 0.0f, 0.0f, 0.0f,
-                0.0f, 0.2f, 0.0f, 0.0f,
-                0.0f, 0.0f, 0.2f, 0.0f,
-                timeX - 0.5f, 0, timeZ - 0.5f, 1.0f
-        };
-        objectsToRender[0].changeTransform(newMatrix);
+//        float timeX = (float) (Math.sin((double) SystemClock.uptimeMillis() / 1000f) + 1) /2;
+//        float timeY = (float) (Math.cos((double) SystemClock.uptimeMillis() / 1000f) + 1) /5;
+//        float timeZ = (float) (Math.cos((double) SystemClock.uptimeMillis() / 1000f) + 1) /2;
+//        float[] newMatrix = {
+//                0.2f, 0.0f, 0.0f, 0.0f,
+//                0.0f, 0.2f, 0.0f, 0.0f,
+//                0.0f, 0.0f, 0.2f, 0.0f,
+//                timeX -0.2f , 0, timeZ - 0.2f, 1.0f
+//        };
+//        objectsToRender[0].changeTransform(newMatrix);
 
         updateLights();
 

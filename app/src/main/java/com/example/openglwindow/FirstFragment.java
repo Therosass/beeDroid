@@ -17,6 +17,9 @@ import java.io.IOException;
 public class FirstFragment extends Fragment {
 
 
+    Object[] objects = new Object[2];
+    Camera camera;
+
     @Override
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container,
@@ -24,6 +27,8 @@ public class FirstFragment extends Fragment {
     ) {
         OpenGLView mGLView = new OpenGLView(getActivity());
         mGLView.start();
+        objects = mGLView.getObjects();
+        camera=mGLView.getCamera();
 
 
 
@@ -33,6 +38,9 @@ public class FirstFragment extends Fragment {
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        MainActivity ma = (MainActivity)getActivity();
+        ma.setObjects(objects);
+        ma.setCamera(camera);
 
 
     }

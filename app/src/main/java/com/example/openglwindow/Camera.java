@@ -13,14 +13,17 @@ public class Camera {
 
         public void setFrustrum(float ratio){
                 int scale = 5;
-                Matrix.frustumM(projectionMatrix, 0, -ratio/scale, ratio/scale, -1.0f/scale, 1.0f/scale, 1.0f/scale, 25.0f/scale);
+                Matrix.frustumM(projectionMatrix, 0, -ratio/scale, ratio/scale, -1.0f/scale, 1.0f/scale, 1.0f/scale, 28.0f/scale);
         }
 
         public float[] getCamera(){
-                Matrix.setLookAtM(viewMatrix, 0, 1.5f, 0.5f, -0.3f, 0f, 0f, -0.3f, 0f, 1.0f, 0.0f);
-
                 Matrix.multiplyMM(vPMatrix, 0, projectionMatrix, 0, viewMatrix, 0);
 
                 return vPMatrix;
+        }
+
+        public void setCamera(float[] lookingFrom, float[] lookingAt){
+                Matrix.setLookAtM(viewMatrix, 0, lookingFrom[0], lookingFrom[1], lookingFrom[2], lookingAt[0], lookingAt[1], lookingAt[2], 0f, 1.0f, 0.0f);
+
         }
 }

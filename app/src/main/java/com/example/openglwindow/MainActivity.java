@@ -5,6 +5,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.opengl.GLES20;
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -13,6 +14,7 @@ import com.google.android.material.snackbar.Snackbar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
 
@@ -27,6 +29,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     public EditText editBox;
     Sensor mMagnetoMeter;
+
+    Object[] objects = new Object[2];
+    Camera camera;
+
+//    public Object[] getObjects(){
+//        return objects;
+//    }
+
+    public void setObjects(Object[] newObjects){
+        objects = newObjects;
+    }
+
+    public void setCamera(Camera newCamera){
+        camera = newCamera;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,12 +145,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         if (accelerometer != null) {
             sensorManager.registerListener(this, accelerometer,
-                    SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_UI);
+                    SensorManager.SENSOR_DELAY_UI, SensorManager.SENSOR_DELAY_UI);
         }
         Sensor magneticField = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         if (magneticField != null) {
             sensorManager.registerListener(this, magneticField,
-                    SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_UI);
+                    SensorManager.SENSOR_DELAY_UI, SensorManager.SENSOR_DELAY_UI);
         }
     }
 
@@ -164,6 +181,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         updateOrientationAngles();
     }
 
+    float[] moveMatrix={0,0,0};
+    float movementSpeed=0.001f;
+
     // Compute the three orientation angles based on the most recent readings from
     // the device's accelerometer and magnetometer.
     public void updateOrientationAngles() {
@@ -174,9 +194,40 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         // "mRotationMatrix" now has up-to-date information.
         SensorManager.getOrientation(rotationMatrix, orientationAngles);
 
-        editBox.setText("Azimuth: "+orientationAngles[0]+
-                ", Pitch: "+orientationAngles[1]+
-                ", Roll: "+orientationAngles[2]);
+        float azimuth=Math.round((Math.toDegrees(orientationAngles[0])));
+        float pitch=Math.round((Math.toDegrees(orientationAngles[1])));
+        float roll=Math.round((Math.toDegrees(orientationAngles[2])));
+
+
+        editBox.setText("Azimuth: "+azimuth+
+                ",\n Pitch: "+pitch+
+                ",\n Roll: "+roll);
+
+
+//        float timeX = (float) (Math.sin((double) SystemClock.uptimeMillis() / 1000f) + 1) /2;
+//        float timeY = (float) (Math.cos((double) SystemClock.uptimeMillis() / 1000f) + 1) /5;
+//        float timeZ = (float) (Math.cos((double) SystemClock.uptimeMillis() / 1000f) + 1) /2;
+        float[] newMatrix = {
+                0.2f, 0.0f, 0.0f, 0.0f,
+                0.0f, 0.2f, 0.0f, 0.0f,
+                0.0f, 0.0f, 0.2f, 0.0f,
+                moveMatrix[0]+(-movementSpeed*pitch) , 0, moveMatrix[2]+(-movementSpeed*roll), 1.0f
+        };
+
+
+        moveMatrix[0]=moveMatrix[0]+(-movementSpeed*pitch);
+        moveMatrix[2]=moveMatrix[2]+(-movementSpeed*roll);
+
+        Log.d("tag", "Pitch: "+moveMatrix[0]);
+        Log.d("tag", "Roll: "+moveMatrix[2]);
+
+        objects[0].changeTransform(newMatrix);
         // "mOrientationAngles" now has up-to-date information.
+
+        //camera
+        //camera.setCamera(new float[]{1.5f, 0.5f, -0.3f}, new float[]{0f, 0f, 0f});
+        camera.setCamera(new float[]{1.5f+moveMatrix[0], 0.5f, -0.3f+moveMatrix[2]},
+                new float[]{moveMatrix[0], 0f, moveMatrix[2]});
+
     }
 }
