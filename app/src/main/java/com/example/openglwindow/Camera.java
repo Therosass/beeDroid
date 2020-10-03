@@ -9,6 +9,11 @@ public class Camera {
         private final float[] vPMatrix = new float[16];
         private final float[] projectionMatrix = new float[16];
         private final float[] viewMatrix = new float[16];
+        private float[] lookPos = new float[3];
+
+        public float[] getCameraPos(){
+                return lookPos;
+        }
 
 
         public void setFrustrum(float ratio){
@@ -23,6 +28,7 @@ public class Camera {
         }
 
         public void setCamera(float[] lookingFrom, float[] lookingAt){
+                lookPos = lookingFrom;
                 Matrix.setLookAtM(viewMatrix, 0, lookingFrom[0], lookingFrom[1], lookingFrom[2], lookingAt[0], lookingAt[1], lookingAt[2], 0f, 1.0f, 0.0f);
 
         }

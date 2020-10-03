@@ -16,6 +16,7 @@ import androidx.appcompat.widget.Toolbar;
 
 import android.os.SystemClock;
 import android.util.Log;
+import android.view.Choreographer;
 import android.view.View;
 
 import android.view.Menu;
@@ -29,8 +30,30 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     public EditText editBox;
     Sensor mMagnetoMeter;
+    private Choreographer.FrameCallback frameCallback = null;
+    private boolean frameCallbackPending = false;
 
-    Object[] objects = new Object[2];
+    public void armVSyncHandler() {
+        if(!frameCallbackPending) {
+            frameCallbackPending = true;
+            if(frameCallback == null)
+            {
+                frameCallback = new Choreographer.FrameCallback() {
+                    @Override
+                    public void doFrame(long frameTimeNanos) {
+                        frameCallbackPending = false;
+
+                        //updateFrame();
+
+                        armVSyncHandler();
+                    }
+                };
+            }
+            Choreographer.getInstance().postFrameCallback(frameCallback);
+        }
+    }
+
+    Object[] objects = new Object[11];
     Camera camera;
 
 //    public Object[] getObjects(){
@@ -204,9 +227,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 ",\n Roll: "+roll);
 
 
-//        float timeX = (float) (Math.sin((double) SystemClock.uptimeMillis() / 1000f) + 1) /2;
-//        float timeY = (float) (Math.cos((double) SystemClock.uptimeMillis() / 1000f) + 1) /5;
-//        float timeZ = (float) (Math.cos((double) SystemClock.uptimeMillis() / 1000f) + 1) /2;
         float[] newMatrix = {
                 0.2f, 0.0f, 0.0f, 0.0f,
                 0.0f, 0.2f, 0.0f, 0.0f,
@@ -217,9 +237,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         moveMatrix[0]=moveMatrix[0]+(-movementSpeed*pitch);
         moveMatrix[2]=moveMatrix[2]+(-movementSpeed*roll);
-
-        Log.d("tag", "Pitch: "+moveMatrix[0]);
-        Log.d("tag", "Roll: "+moveMatrix[2]);
 
         objects[0].changeTransform(newMatrix);
         // "mOrientationAngles" now has up-to-date information.

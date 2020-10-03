@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
+import android.icu.text.SymbolTable;
 import android.opengl.GLSurfaceView;
 
 import javax.microedition.khronos.egl.EGLConfig;
@@ -25,13 +26,22 @@ public class GLRenderer implements GLSurfaceView.Renderer {
 
     public Camera camera = new Camera();
 
-    int Translations[] = new int[1];
+    private int shaderProgram = -1;
+    private int attribLoc = -1;
 
     private final Context mActivityContext;
 
-    int[] mTextureDataHandle = new int[2];
+    private Object[] objectsToRender = new Object[11];
+    int[] mTextureDataHandle = new int[3];
 
-    public Matrix4f mvp;
+    /*
+     *
+     * BUFFER OBJECTS
+     *
+     */
+
+    final int[] VBOs = new int[11];
+    final int[] IBOs = new int[11];
 
     private class PointLight {
         float[] position = new float[3];
@@ -59,7 +69,7 @@ public class GLRenderer implements GLSurfaceView.Renderer {
                     "void main()\n" +
                     "{\n" +
                     " gl_Position = mvpMat * ( transformation * vec4(inPosition.xyz, 1.0));\n" +
-                    " v_TexCoordinate = a_TexCoordinate + vec2(transformation[3].x/20.0, transformation[3].z/20.0);\n"+
+                    " v_TexCoordinate = a_TexCoordinate + vec2(transformation[3].x/1.0, transformation[3].z/2.0);\n"+
                     " outNormal = inNormal;\n"+
                     " transPos = vec3(transformation * gl_Position);\n" +
                     "}  \n";
@@ -71,6 +81,7 @@ public class GLRenderer implements GLSurfaceView.Renderer {
                     "uniform sampler2D u_Texture;\n"+
                     "in vec3 outNormal;\n"+
                     "in vec3 transPos;\n"+
+                    "uniform vec3 cameraPos;\n"+
                     "out vec4 outColor;\n"+
                     "struct PointLight {"+
                         "vec3 position;\n"+
@@ -88,7 +99,7 @@ public class GLRenderer implements GLSurfaceView.Renderer {
                         "vec3 lightDir = normalize(light.position - fragPos);\n"+
                         "float diff = max(dot(normal, lightDir), 0.0);\n"+
                         "vec3 reflectDir = reflect(-lightDir, normal);\n"+
-                        "float spec = pow(max(dot(viewDir, reflectDir), 0.0), 0.2);\n"+
+                        "float spec = pow(max(dot(viewDir, reflectDir), 0.0), 2.0);\n"+
                         //"float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);\n"+
                         "float distance    = length(light.position - fragPos);\n"+
                         "float attenuation = 1.0 / (light.constant + light.linear * distance +\n"+
@@ -107,25 +118,12 @@ public class GLRenderer implements GLSurfaceView.Renderer {
                         "vec3 normal = normalize(outNormal);\n"+
                         "vec3 result = vec3(0.0,1.0,0.0);\n"+
                         "for(int i = 0; i < NR_POINT_LIGHTS; i++)\n"+
-                            "result = CalcPointLight(pointLights[i], outNormal, transPos, vec3(1.5,0.5,-0.3));\n"+
+                            "result = CalcPointLight(pointLights[i], outNormal, transPos, cameraPos);\n"+
                         "outColor  = vec4(result,1.0);\n"+
                     "}  \n";
 
-    private Object[] objectsToRender = new Object[2];
 
-    private int shaderProgram = -1;
 
-    static final int COORDS_PER_VERTEX = 3;
-    private int attribLoc = -1;
-
-    /*
-    *
-    * BUFFER OBJECTS
-    *
-     */
-
-    final int[] VBOs = new int[2];
-    final int[] IBOs = new int[2];
 
 
     public GLRenderer(Context mActivityContext) {
@@ -173,10 +171,10 @@ public class GLRenderer implements GLSurfaceView.Renderer {
     }
 
     public void createBuffers(){
-        GLES20.glGenBuffers(2, VBOs, 0);
-        GLES20.glGenBuffers(2, IBOs, 0);
+        GLES20.glGenBuffers(11, VBOs, 0);
+        GLES20.glGenBuffers(11, IBOs, 0);
 
-        for(int i = 0; i < 2; i++) {
+        for(int i = 0; i < 11; i++) {
             FloatBuffer vbo = ByteBuffer.allocateDirect(objectsToRender[i].getVerticesSize()).order(ByteOrder.nativeOrder()).asFloatBuffer();
             vbo.put(Object.returnVerticesAsArray(objectsToRender[i].vertices)).position(0);
             IntBuffer ibo = ByteBuffer.allocateDirect(objectsToRender[i].getIndicesSize()).order(ByteOrder.nativeOrder()).asIntBuffer();
@@ -231,18 +229,18 @@ public class GLRenderer implements GLSurfaceView.Renderer {
             GLES20.glLinkProgram(shaderProgram);
             final int[] linkStatus = new int[1];
             GLES20.glGetProgramiv(shaderProgram, GLES20.GL_LINK_STATUS, linkStatus, 0);
-            System.out.println("Error compiling program: " + GLES20.glGetProgramInfoLog(shaderProgram));
-            Log.d("tag", "Error compiling program: " + GLES20.glGetProgramInfoLog(shaderProgram));
-            Log.d("tag", "Error compiling program: " + GLES20.glGetShaderInfoLog(shaderProgram));
             Log.d("tag", GLES20.glGetString(GLES20.GL_SHADING_LANGUAGE_VERSION));
             if (linkStatus[0] == 0)
             {
-
+                System.out.println("Error compiling program: " + GLES20.glGetProgramInfoLog(shaderProgram));
+                Log.d("tag", "Error compiling program: " + GLES20.glGetProgramInfoLog(shaderProgram));
+                Log.d("tag", "Error compiling program: " + GLES20.glGetShaderInfoLog(shaderProgram));
                 GLES20.glDeleteProgram(shaderProgram);
                 shaderProgram = 0;
             }
             mTextureDataHandle[0] = loadTexture(mActivityContext,R.drawable.checkerboard);
             mTextureDataHandle[1] = loadTexture(mActivityContext,R.drawable.wood);
+            mTextureDataHandle[2] = loadTexture(mActivityContext,R.drawable.lamp_texture);
             initLights();
 
         }
@@ -262,9 +260,9 @@ public class GLRenderer implements GLSurfaceView.Renderer {
             lights[i].quadratic = 0.032f;
         }
         lights[0].position = new float[]{1.0f,0.0f,0.0f};
-        lights[1].position = new float[]{0.0f,1.0f,0.0f};
+        lights[1].position = new float[]{0.0f,0.0f,0.0f};
         lights[2].position = new float[]{0.0f,0.0f,1.0f};
-        lights[3].position = new float[]{0.5f,0.5f,-0.3f};
+        lights[3].position = new float[]{0.5f,0.0f,-0.3f};
     }
 
     private void updateLights(){
@@ -289,19 +287,7 @@ public class GLRenderer implements GLSurfaceView.Renderer {
     @Override
     public void onDrawFrame(GL10 gl) {
 
-//        float timeX = (float) (Math.sin((double) SystemClock.uptimeMillis() / 1000f) + 1) /2;
-//        float timeY = (float) (Math.cos((double) SystemClock.uptimeMillis() / 1000f) + 1) /5;
-//        float timeZ = (float) (Math.cos((double) SystemClock.uptimeMillis() / 1000f) + 1) /2;
-//        float[] newMatrix = {
-//                0.2f, 0.0f, 0.0f, 0.0f,
-//                0.0f, 0.2f, 0.0f, 0.0f,
-//                0.0f, 0.0f, 0.2f, 0.0f,
-//                timeX -0.2f , 0, timeZ - 0.2f, 1.0f
-//        };
-//        objectsToRender[0].changeTransform(newMatrix);
-
         updateLights();
-
 
         if(shaderProgram != -1) {
             GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT|GLES20.GL_DEPTH_BUFFER_BIT);
@@ -314,11 +300,25 @@ public class GLRenderer implements GLSurfaceView.Renderer {
             GLES20.glUniformMatrix4fv(MVPLocation, 1, false, cameraMatrix, 0);
 
 
-            for(int i = 0; i < 2; i++) {
+            int cameraPos = GLES20.glGetUniformLocation(shaderProgram, "cameraPos");
+            GLES20.glUniform3fv(cameraPos, 1, camera.getCameraPos(), 0);
+
+            for(int i = 0; i < 11; i++) {
 
                 int mTextureUniformHandle = GLES20.glGetUniformLocation(shaderProgram, "u_Texture");
                 GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-                GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureDataHandle[i]);
+                switch(i) {
+                    case 0:
+                        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureDataHandle[0]);
+                        break;
+                    case 1:
+                        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureDataHandle[1]);
+                        break;
+                    default:
+                        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureDataHandle[2]);
+                }
+
+
                 GLES20.glUniform1i(mTextureUniformHandle, 0);
 
                 MVPLocation = GLES20.glGetUniformLocation(shaderProgram, "transformation");

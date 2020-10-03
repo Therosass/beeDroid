@@ -17,7 +17,7 @@ import java.io.IOException;
 public class FirstFragment extends Fragment {
 
 
-    Object[] objects = new Object[2];
+    Object[] objects = new Object[11];
     Camera camera;
 
     @Override

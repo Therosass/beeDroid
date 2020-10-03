@@ -1,10 +1,5 @@
 package com.example.openglwindow;
 
-import android.content.res.AssetManager;
-import android.opengl.Matrix;
-import android.renderscript.Matrix4f;
-
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class Object {
@@ -14,6 +9,7 @@ public class Object {
     ArrayList<Vertex> vertices = new ArrayList<Vertex>();
     ArrayList<Face> faces = new ArrayList<Face>();
     Transformation transform = new Transformation();
+    private float[] hitbox;
 
     public int VBOindex;
     public int IBOindex;
@@ -32,6 +28,7 @@ public class Object {
         for(int i = 0; i < 16; i++) {
             transform.mat[i] = newNumbers[i];
         }
+        calcHitbox();
     }
 
     static class Position{
@@ -63,6 +60,55 @@ public class Object {
         static int getSize(){
             return 3*4;
         }
+    }
+
+    private float findWidth(){
+        float minX = vertices.get(0).pos.x;
+        float maxX = vertices.get(0).pos.x;
+
+        for(Vertex vertex : vertices){
+            if(vertex.pos.x < minX){
+                minX = vertex.pos.x;
+            }
+            if(vertex.pos.x > maxX){
+                maxX = vertex.pos.x;
+            }
+        }
+        return maxX - minX;
+    }
+
+    private float findHeight(){
+        float minY = vertices.get(0).pos.y;
+        float maxY = vertices.get(0).pos.y;
+
+        for(Vertex vertex : vertices){
+            if(vertex.pos.y < minY){
+                minY = vertex.pos.y;
+            }
+            if(vertex.pos.y > maxY){
+                maxY = vertex.pos.y;
+            }
+        }
+        return maxY - minY;
+    }
+    public float[] getHitBox(){
+        return hitbox;
+    }
+
+    public void calcHitbox(){
+        if(hitbox == null) {
+            hitbox = new float[8];
+        }
+        float width = findWidth()/2 * transform.mat[0];
+        float height = findHeight()/2 * transform.mat[0];
+        hitbox[0] = -width + transform.mat[12];
+        hitbox[1] = -height + transform.mat[14];
+        hitbox[2] = width + transform.mat[12];
+        hitbox[3] = -height + transform.mat[14];
+        hitbox[4] = -width + transform.mat[12];
+        hitbox[5] = height + transform.mat[14];
+        hitbox[6] = width + transform.mat[12];
+        hitbox[7] = height + transform.mat[14];
     }
 
     public int getVerticesSize(){
