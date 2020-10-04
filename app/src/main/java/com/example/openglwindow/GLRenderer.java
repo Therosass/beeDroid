@@ -71,7 +71,7 @@ public class GLRenderer implements GLSurfaceView.Renderer {
                     " gl_Position = mvpMat * ( transformation * vec4(inPosition.xyz, 1.0));\n" +
                     " v_TexCoordinate = a_TexCoordinate + vec2(transformation[3].x/1.0, transformation[3].z/2.0);\n"+
                     " outNormal = inNormal;\n"+
-                    " transPos = vec3(transformation * gl_Position);\n" +
+                    " transPos = vec3(transformation * vec4(inPosition,1.0));\n" +
                     "}  \n";
 
     private final String fragmentShaderCode =
@@ -94,13 +94,13 @@ public class GLRenderer implements GLSurfaceView.Renderer {
                     "};\n"+
                     "#define NR_POINT_LIGHTS 4\n"+
                     "uniform PointLight pointLights[NR_POINT_LIGHTS];\n"+
-                   "vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)\n"+
+                   "vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewPos)\n"+
                     "{\n"+
                         "vec3 lightDir = normalize(light.position - fragPos);\n"+
                         "float diff = max(dot(normal, lightDir), 0.0);\n"+
                         "vec3 reflectDir = reflect(-lightDir, normal);\n"+
-                        "float spec = pow(max(dot(viewDir, reflectDir), 0.0), 2.0);\n"+
-                        //"float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);\n"+
+                        "vec3 viewDir = normalize(viewPos - fragPos);\n"+
+                        "float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);\n"+
                         "float distance    = length(light.position - fragPos);\n"+
                         "float attenuation = 1.0 / (light.constant + light.linear * distance +\n"+
                                 "light.quadratic * (distance * distance));\n"+
@@ -116,9 +116,9 @@ public class GLRenderer implements GLSurfaceView.Renderer {
                     "void main()\n" +
                     "{\n" +
                         "vec3 normal = normalize(outNormal);\n"+
-                        "vec3 result = vec3(0.0,1.0,0.0);\n"+
+                        "vec3 result = vec3(0.0,0.0,0.0);\n"+
                         "for(int i = 0; i < NR_POINT_LIGHTS; i++)\n"+
-                            "result = CalcPointLight(pointLights[i], outNormal, transPos, cameraPos);\n"+
+                            "result += CalcPointLight(pointLights[i], outNormal, transPos, cameraPos);\n"+
                         "outColor  = vec4(result,1.0);\n"+
                     "}  \n";
 
@@ -254,17 +254,16 @@ public class GLRenderer implements GLSurfaceView.Renderer {
             lights[i] = new PointLight();
             lights[i].ambient = new float[]{0.1f,0.1f,0.1f};
             lights[i].specular = new float[]{1.0f,1.0f,1.0f};
-            lights[i].diffuse = new float[]{1.0f,1.0f,1.0f};
+            lights[i].diffuse = new float[]{1.0f,0.902f,0.575f};
             lights[i].constant = 1.0f;
-            lights[i].linear = 0.09f;
-            lights[i].quadratic = 0.032f;
+            lights[i].linear = 0.7f;
+            lights[i].quadratic = 1.8f;
         }
-        lights[0].position = new float[]{1.0f,0.0f,0.0f};
-        lights[1].position = new float[]{0.0f,0.0f,0.0f};
-        lights[2].position = new float[]{0.0f,0.0f,1.0f};
-        lights[3].position = new float[]{0.5f,0.0f,-0.3f};
+        lights[0].position = new float[]{-2.0f,0.1f,-1.0f};
+        lights[1].position = new float[]{-2.0f,0.1f,1.0f};
+        lights[2].position = new float[]{2.0f,0.1f,1.0f};
+        lights[3].position = new float[]{2.0f,0.1f,-1.0f};
     }
-
     private void updateLights(){
         for(int i = 0; i < 4; i++) {
             int position = GLES20.glGetUniformLocation(shaderProgram, "pointLights[" + Integer.toString(i) + "].position");
@@ -289,7 +288,9 @@ public class GLRenderer implements GLSurfaceView.Renderer {
 
         updateLights();
 
+
         if(shaderProgram != -1) {
+
             GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT|GLES20.GL_DEPTH_BUFFER_BIT);
             GLES20.glUseProgram(shaderProgram);
 
@@ -307,17 +308,6 @@ public class GLRenderer implements GLSurfaceView.Renderer {
 
                 int mTextureUniformHandle = GLES20.glGetUniformLocation(shaderProgram, "u_Texture");
                 GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-//                switch(i) {
-//                    case 0:
-//                        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureDataHandle[0]);
-//                        break;
-//                    case 1:
-//                        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureDataHandle[1]);
-//                        break;
-//                    default:
-//                        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureDataHandle[2]);
-//                }
-
                 if (i==0){
                     GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureDataHandle[0]);
                 }
@@ -344,16 +334,10 @@ public class GLRenderer implements GLSurfaceView.Renderer {
                 GLES20.glVertexAttribPointer(attribLoc, 3, GLES20.GL_FLOAT, false, 36, 0);
                 GLES20.glEnableVertexAttribArray(attribLoc);
                 attribLoc = GLES20.glGetAttribLocation(shaderProgram, "a_TexCoordinate");
-                if (attribLoc == -1) {
-                    System.out.println("Failed to get attrib texel location");
-                }
                 GLES20.glVertexAttribPointer(attribLoc, 2, GLES20.GL_FLOAT, false, 36, 16);
                 GLES20.glEnableVertexAttribArray(attribLoc);
 
                 attribLoc = GLES20.glGetAttribLocation(shaderProgram, "inNormal");
-                if (attribLoc == -1) {
-                    System.out.println("Failed to get attrib normal location");
-                }
                 GLES20.glVertexAttribPointer(attribLoc, 3, GLES20.GL_FLOAT, false, 36, 24);
                 GLES20.glEnableVertexAttribArray(attribLoc);
 

@@ -23,6 +23,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.Switch;
+import android.widget.TextView;
 
 import java.util.List;
 
@@ -219,9 +221,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 ",\n Roll: "+roll);
 
         float[] newMatrix = {
-                1.0f, 0.0f, 0.0f, 0.0f,
-                0.0f, 1.0f, 0.0f, 0.0f,
-                0.0f, 0.0f, 1.0f, 0.0f,
+                0.2f, 0.0f, 0.0f, 0.0f,
+                0.0f, 0.2f, 0.0f, 0.0f,
+                0.0f, 0.0f, 0.2f, 0.0f,
                 moveMatrix[0]+(-movementSpeed*pitch) , 0.2f, moveMatrix[2]+(-movementSpeed*roll), 1.0f
         };
 
@@ -234,7 +236,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         //camera
         //camera.setCamera(new float[]{1.5f, 0.5f, -0.3f}, new float[]{0f, 0f, 0f});
-        camera.setCamera(new float[]{1.5f+moveMatrix[0], 1.0f, -0.3f+moveMatrix[2]},
+        camera.setCamera(new float[]{0.3f+moveMatrix[0], 0.2f, moveMatrix[2]},
                 new float[]{moveMatrix[0], 0f, moveMatrix[2]});
 
     }
@@ -243,6 +245,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         float[] ballHitbox=objects[0].getHitBox();
         boolean[] isLefts=new boolean[8];
         boolean[] isTops=new boolean[8];
+        boolean collision = false;
         for (int i=6; i<11; i++){
             float[] boxHitbox=objects[i].getHitBox();
             //if same side vertically
@@ -261,7 +264,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             boolean sample=isLefts[0];
             int idx=1;
 
-           while(sample==isLefts[idx] && idx<7){
+            while(sample==isLefts[idx] && idx<7){
                 idx++;
             }
             boolean sample1=isTops[0];
@@ -271,9 +274,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 idx1++;
             }
 
-           if (idx<7 && idx1<7){
-               Log.d("tag", "Collision at "+i+". object");
-           }
+            if (idx<7 && idx1<7){
+                collision |= true;
+            }
 
 //            boolean aLeft=true;
 //            boolean bLeft=true;
@@ -290,7 +293,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 //            }
 
         }
+        TextView text = findViewById(R.id.textView);
+        float[] ballPos = new float[2];
+        ballPos[0] = objects[0].transform.mat[12];
+        ballPos[1] = objects[0].transform.mat[14];
+        String posText = Float.toString(ballPos[0]) + " : " + Float.toString(ballPos[1]);
+        text.setText(posText);
+        if(collision) {
+            text.setBackgroundColor(0xffffffff);
 
+        }
+        else {
+            text.setBackgroundColor(0xff00ff00);
+        }
        // Log.d("tag", ""+isLeft(0, -1, 1, -1,-2,-2));;
 
     }

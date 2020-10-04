@@ -17,8 +17,8 @@ public class Camera {
 
 
         public void setFrustrum(float ratio){
-                int scale = 5;
-                Matrix.frustumM(projectionMatrix, 0, -ratio/scale, ratio/scale, -1.0f/scale, 1.0f/scale, 1.0f/scale, 28.0f/scale);
+                int scale = 10;
+                Matrix.frustumM(projectionMatrix, 0, -ratio/scale, ratio/scale, -1.0f/scale, 1.0f/scale, 1.0f/scale, 1.0f*scale);
         }
 
         public float[] getCamera(){
