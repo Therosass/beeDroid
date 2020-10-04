@@ -196,8 +196,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         updateOrientationAngles();
     }
 
-    float[] moveMatrix={2.3f, 0.2f,0.75f};
+    float[] moveMatrix={2.3f, 0.15f,0.75f};
     float movementSpeed=0.001f;
+    float ballScale=0.1f;
 
     // Compute the three orientation angles based on the most recent readings from
     // the device's accelerometer and magnetometer.
@@ -205,8 +206,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         // Update rotation matrix, which is needed to update orientation angles.
         SensorManager.getRotationMatrix(rotationMatrix, null,
                 accelerometerReading, magnetometerReading);
-
         // "mRotationMatrix" now has up-to-date information.
+
         SensorManager.getOrientation(rotationMatrix, orientationAngles);
         // "mOrientationAngles" now has up-to-date information.
 
@@ -222,15 +223,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 1.0f, 0.0f, 0.0f, 0.0f,
                 0.0f, 1.0f, 0.0f, 0.0f,
                 0.0f, 0.0f, 1.0f, 0.0f,
-                moveMatrix[0]+(-movementSpeed*pitch) , 0.2f, moveMatrix[2]+(-movementSpeed*roll), 1.0f
+                moveMatrix[0]+(-movementSpeed*pitch) , 0.15f, moveMatrix[2]+(-movementSpeed*roll), 1.0f
         };
-
-        moveMatrix[0]=moveMatrix[0]+(-movementSpeed*pitch);
-        moveMatrix[2]=moveMatrix[2]+(-movementSpeed*roll);
 
         objects[0].changeTransform(newMatrix);
 
-        checkCollision();
+        if(checkCollision()){
+            objects[0].moveObject(new float[]{2.3f, 0.15f,0.75f});
+            moveMatrix[0]=2.3f;
+            moveMatrix[2]=0.75f;
+        }
+        else{
+            moveMatrix[0]=moveMatrix[0]+(-movementSpeed*pitch);
+            moveMatrix[2]=moveMatrix[2]+(-movementSpeed*roll);
+        }
+
 
         //camera
         //camera.setCamera(new float[]{1.5f, 0.5f, -0.3f}, new float[]{0f, 0f, 0f});
@@ -239,7 +246,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     }
 
-    public void checkCollision(){
+
+
+    public boolean checkCollision(){
         float[] ballHitbox=objects[0].getHitBox();
         boolean[] isLefts=new boolean[8];
         boolean[] isTops=new boolean[8];
@@ -271,28 +280,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 idx1++;
             }
 
-           if (idx<7 && idx1<7){
-               Log.d("tag", "Collision at "+i+". object");
+           if ((idx<7 && idx1<7) ||
+           ballHitbox[5]>1.0f || ballHitbox[1]<-1.0f ||
+                   ballHitbox[2]>2.5f){
+               Log.d("tag", "Collision at "+i+". object "+idx+" "+idx);
+               return true;
+           }
+           else if(ballHitbox[0]<-2.5f){//we won
+               Log.d("tag", "You won!!");
            }
 
-//            boolean aLeft=true;
-//            boolean bLeft=true;
-//            boolean aTop=true;
-//            boolean bTop=true;
-//            for (int k=0; k<8; k++){
-//                aLeft= aLeft && isLefts[k];
-//                bLeft = bLeft && !isLefts[k];
-//                aTop= aTop && isTops[k];
-//                bTop = bTop && !isTops[k];
-//            }
-//            if (((aLeft || bLeft)==false) || ((aTop || bTop)==false)){
-//                Log.d("tag", "Collision at "+i+". object");
-//            }
 
         }
-
-       // Log.d("tag", ""+isLeft(0, -1, 1, -1,-2,-2));;
-
+        return false;
     }
 
     public boolean isLeft(float ax, float ay, float bx, float by, float cx, float cy){
