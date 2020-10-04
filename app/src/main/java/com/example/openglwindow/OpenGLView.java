@@ -60,6 +60,18 @@ public class OpenGLView extends GLSurfaceView {
 
         //objects[0].moveObject(new float[]{2.3f, 0.2f,0.75f}); // Golyo
 
+        objects[1].changeTransform(new float[]{
+                -1.0f,0.0f,0.0f,0.0f,
+                0.0f,1.0f,0.0f,0.0f,
+                0.0f,0.0f,-1.0f,0.0f,
+                0.0f,-0.0f,0.0f,1.0f
+        });
+        objects[2].changeTransform(new float[]{
+                -1.0f,0.0f,0.0f,0.0f,
+                0.0f,1.0f,0.0f,0.0f,
+                0.0f,0.0f,-1.0f,0.0f,
+                0.0f,-0.0f,0.0f,1.0f
+        });
         objects[1].moveObject(new float[]{2.0f, 0.1f,1.0f}); // Lampa1
         objects[2].moveObject(new float[]{-2.0f, 0.1f,1.0f}); // Lampa2
         objects[3].moveObject(new float[]{2.0f, 0.1f,-1.0f}); // Lampa3

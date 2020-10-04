@@ -234,7 +234,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         //camera
         //camera.setCamera(new float[]{1.5f, 0.5f, -0.3f}, new float[]{0f, 0f, 0f});
-        camera.setCamera(new float[]{1.5f+moveMatrix[0], 0.5f, -0.3f+moveMatrix[2]},
+        camera.setCamera(new float[]{1.5f+moveMatrix[0], 1.0f, -0.3f+moveMatrix[2]},
                 new float[]{moveMatrix[0], 0f, moveMatrix[2]});
 
     }
