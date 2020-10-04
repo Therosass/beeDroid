@@ -56,10 +56,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     Object[] objects = new Object[11];
     Camera camera;
 
-//    public Object[] getObjects(){
-//        return objects;
-//    }
-
     public void setObjects(Object[] newObjects){
         objects = newObjects;
     }
@@ -77,16 +73,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         List<Sensor> sensors = sensorManager.getSensorList(Sensor.TYPE_ALL);
 
-        if (sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null){
-            Log.d("tag", "accelerometer!!");
-        } else {
-            Log.d("tag", "no accelerometer");
-        }
-        if (sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD) != null){
-            Log.d("tag", "magnetic field!!");
-        } else {
-            Log.d("tag", "no magnetic field");
-        }
+//        if (sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null){
+//            Log.d("tag", "accelerometer!!");
+//        } else {
+//            Log.d("tag", "no accelerometer");
+//        }
+//        if (sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD) != null){
+//            Log.d("tag", "magnetic field!!");
+//        } else {
+//            Log.d("tag", "no magnetic field");
+//        }
 
         //mMagnetoMeter = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
 //        Toolbar toolbar = findViewById(R.id.toolbar);
@@ -196,15 +192,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             System.arraycopy(event.values, 0, magnetometerReading,
                     0, magnetometerReading.length);
         }
-        
-//        editBox.setText("Azimuth: "+(float)Math.round(accelerometerReading[0]* 100) / 100+
-//                ", Pitch: "+(float)Math.round(accelerometerReading[1]* 100) / 100+
-//                ", Roll: "+(float)Math.round(accelerometerReading[2]* 100) / 100);
 
         updateOrientationAngles();
     }
 
-    float[] moveMatrix={0,0,0};
+    float[] moveMatrix={2.3f, 0.2f,0.75f};
     float movementSpeed=0.001f;
 
     // Compute the three orientation angles based on the most recent readings from
@@ -216,30 +208,29 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         // "mRotationMatrix" now has up-to-date information.
         SensorManager.getOrientation(rotationMatrix, orientationAngles);
+        // "mOrientationAngles" now has up-to-date information.
 
         float azimuth=Math.round((Math.toDegrees(orientationAngles[0])));
         float pitch=Math.round((Math.toDegrees(orientationAngles[1])));
         float roll=Math.round((Math.toDegrees(orientationAngles[2])));
 
-
         editBox.setText("Azimuth: "+azimuth+
                 ",\n Pitch: "+pitch+
                 ",\n Roll: "+roll);
 
-
         float[] newMatrix = {
-                0.2f, 0.0f, 0.0f, 0.0f,
-                0.0f, 0.2f, 0.0f, 0.0f,
-                0.0f, 0.0f, 0.2f, 0.0f,
-                moveMatrix[0]+(-movementSpeed*pitch) , 0, moveMatrix[2]+(-movementSpeed*roll), 1.0f
+                1.0f, 0.0f, 0.0f, 0.0f,
+                0.0f, 1.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 1.0f, 0.0f,
+                moveMatrix[0]+(-movementSpeed*pitch) , 0.2f, moveMatrix[2]+(-movementSpeed*roll), 1.0f
         };
-
 
         moveMatrix[0]=moveMatrix[0]+(-movementSpeed*pitch);
         moveMatrix[2]=moveMatrix[2]+(-movementSpeed*roll);
 
         objects[0].changeTransform(newMatrix);
-        // "mOrientationAngles" now has up-to-date information.
+
+        checkCollision();
 
         //camera
         //camera.setCamera(new float[]{1.5f, 0.5f, -0.3f}, new float[]{0f, 0f, 0f});
@@ -247,4 +238,24 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 new float[]{moveMatrix[0], 0f, moveMatrix[2]});
 
     }
+
+    public void checkCollision(){
+        float[] ballHitbox=objects[0].getHitBox();
+        for (int i=6; i<11; i++){
+            float[] boxHitbox=objects[i].getHitBox();
+            for (int j=0; j<8; j++){
+//                if (boxHitbox[0]>ballHitbox[j] && boxHitbox[1]<ballHitbox[j+1] &&
+//                        boxHitbox[2]<ballHitbox[j] && boxHitbox[1]<ballHitbox[j+1] &&
+//                boxHitbox[4]>ballHitbox[j] && boxHitbox[5]>ballHitbox[j+1] &&
+//                boxHitbox[6]<ballHitbox[j] && boxHitbox[7]>ballHitbox[j+1]){
+                    j++;
+                    //return true;
+                    Log.d("tag", "Collision at "+j+". object");
+//                }
+            }
+        }
+
+    }
+
+
 }

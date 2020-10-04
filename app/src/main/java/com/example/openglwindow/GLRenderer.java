@@ -238,9 +238,9 @@ public class GLRenderer implements GLSurfaceView.Renderer {
                 GLES20.glDeleteProgram(shaderProgram);
                 shaderProgram = 0;
             }
-            mTextureDataHandle[0] = loadTexture(mActivityContext,R.drawable.checkerboard);
-            mTextureDataHandle[1] = loadTexture(mActivityContext,R.drawable.wood);
-            mTextureDataHandle[2] = loadTexture(mActivityContext,R.drawable.lamp_texture);
+            mTextureDataHandle[0] = loadTexture(mActivityContext,R.drawable.ball_texture);
+            mTextureDataHandle[1] = loadTexture(mActivityContext,R.drawable.lamp_texture);
+            mTextureDataHandle[2] = loadTexture(mActivityContext,R.drawable.map_texture);
             initLights();
 
         }
@@ -307,15 +307,25 @@ public class GLRenderer implements GLSurfaceView.Renderer {
 
                 int mTextureUniformHandle = GLES20.glGetUniformLocation(shaderProgram, "u_Texture");
                 GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-                switch(i) {
-                    case 0:
-                        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureDataHandle[0]);
-                        break;
-                    case 1:
-                        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureDataHandle[1]);
-                        break;
-                    default:
-                        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureDataHandle[2]);
+//                switch(i) {
+//                    case 0:
+//                        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureDataHandle[0]);
+//                        break;
+//                    case 1:
+//                        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureDataHandle[1]);
+//                        break;
+//                    default:
+//                        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureDataHandle[2]);
+//                }
+
+                if (i==0){
+                    GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureDataHandle[0]);
+                }
+                else if(i<=4){
+                    GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureDataHandle[1]);
+                }
+                else{
+                    GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureDataHandle[2]);
                 }
 
 

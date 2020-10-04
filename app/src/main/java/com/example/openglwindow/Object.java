@@ -20,11 +20,20 @@ public class Object {
             1.0f,0.0f,0.0f,0.0f,
             0.0f,1.0f,0.0f,0.0f,
             0.0f,0.0f,1.0f,0.0f,
-            0.0f,-0.2f,0.0f,1.0f
+            0.0f,-0.0f,0.0f,1.0f
         };
     }
 
-    public void changeTransform(float[] newNumbers){
+    public void moveObject(float[] newPos) {
+        transform.mat[12] = newPos[0];
+        transform.mat[13] = newPos[1];
+        transform.mat[14] = newPos[2];
+        calcHitbox();
+    }
+
+
+
+        public void changeTransform(float[] newNumbers){
         for(int i = 0; i < 16; i++) {
             transform.mat[i] = newNumbers[i];
         }
