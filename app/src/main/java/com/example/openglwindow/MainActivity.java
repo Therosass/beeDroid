@@ -241,20 +241,62 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     public void checkCollision(){
         float[] ballHitbox=objects[0].getHitBox();
+        boolean[] isLefts=new boolean[8];
+        boolean[] isTops=new boolean[8];
         for (int i=6; i<11; i++){
             float[] boxHitbox=objects[i].getHitBox();
-            for (int j=0; j<8; j++){
-//                if (boxHitbox[0]>ballHitbox[j] && boxHitbox[1]<ballHitbox[j+1] &&
-//                        boxHitbox[2]<ballHitbox[j] && boxHitbox[1]<ballHitbox[j+1] &&
-//                boxHitbox[4]>ballHitbox[j] && boxHitbox[5]>ballHitbox[j+1] &&
-//                boxHitbox[6]<ballHitbox[j] && boxHitbox[7]>ballHitbox[j+1]){
-                    j++;
-                    //return true;
-                    Log.d("tag", "Collision at "+j+". object");
-//                }
+            //if same side vertically
+            for (int j=0; j<8; j++){ //for every point
+                isLefts[j]=isLeft(boxHitbox[0], boxHitbox[1], boxHitbox[2], boxHitbox[3], ballHitbox[j], ballHitbox[j+1]); //left side
+                isLefts[j+1]=isLeft(boxHitbox[4], boxHitbox[5], boxHitbox[6], boxHitbox[7], ballHitbox[j], ballHitbox[j+1]); //right side
+                j++;
             }
+            //if same side vertically
+            for (int j=0; j<8; j++){ //for every point
+                isTops[j]=isLeft(boxHitbox[0], boxHitbox[1], boxHitbox[4], boxHitbox[5], ballHitbox[j], ballHitbox[j+1]); //top side
+                isTops[j+1]=isLeft(boxHitbox[2], boxHitbox[3], boxHitbox[6], boxHitbox[7], ballHitbox[j], ballHitbox[j+1]); //bottom side
+                j++;
+            }
+
+            boolean sample=isLefts[0];
+            int idx=1;
+
+           while(sample==isLefts[idx] && idx<7){
+                idx++;
+            }
+            boolean sample1=isTops[0];
+            int idx1=1;
+
+            while(sample1==isTops[idx1] && idx1<7){
+                idx1++;
+            }
+
+           if (idx<7 && idx1<7){
+               Log.d("tag", "Collision at "+i+". object");
+           }
+
+//            boolean aLeft=true;
+//            boolean bLeft=true;
+//            boolean aTop=true;
+//            boolean bTop=true;
+//            for (int k=0; k<8; k++){
+//                aLeft= aLeft && isLefts[k];
+//                bLeft = bLeft && !isLefts[k];
+//                aTop= aTop && isTops[k];
+//                bTop = bTop && !isTops[k];
+//            }
+//            if (((aLeft || bLeft)==false) || ((aTop || bTop)==false)){
+//                Log.d("tag", "Collision at "+i+". object");
+//            }
+
         }
 
+       // Log.d("tag", ""+isLeft(0, -1, 1, -1,-2,-2));;
+
+    }
+
+    public boolean isLeft(float ax, float ay, float bx, float by, float cx, float cy){
+        return ((bx - ax)*(cy - ay) - (by - ay)*(cx - ax))>0;
     }
 
 
