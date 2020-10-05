@@ -23,12 +23,17 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
     public EditText editBox;
+    public ImageView startIV;
+    public LinearLayout startLL;
+    public LinearLayout finishLL;
     Sensor mMagnetoMeter;
     private Choreographer.FrameCallback frameCallback = null;
     private boolean frameCallbackPending = false;
@@ -97,6 +102,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 //            }
 //        });
 
+        sensorManager.unregisterListener(this);
+        startIV=findViewById(R.id.startIV);
+        startLL=findViewById(R.id.startLL);
+        finishLL=findViewById(R.id.finishLL);
+
         editBox = new EditText(this);
         editBox.setText("Hello Matron");
 
@@ -104,6 +114,35 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         addContentView(editBox, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
     }
+
+    public void onClickStart(View v){
+        startLL.setVisibility(View.INVISIBLE);
+        startIV.setVisibility(View.INVISIBLE);
+        Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        if (accelerometer != null) {
+            sensorManager.registerListener(this, accelerometer,
+                    SensorManager.SENSOR_DELAY_UI, SensorManager.SENSOR_DELAY_UI);
+        }
+        Sensor magneticField = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        if (magneticField != null) {
+            sensorManager.registerListener(this, magneticField,
+                    SensorManager.SENSOR_DELAY_UI, SensorManager.SENSOR_DELAY_UI);
+        }
+
+    }
+
+    public void onClickQuit(View v){
+        finish();
+
+    }
+
+    public void finishGame(){
+        sensorManager.unregisterListener(this);
+        finishLL.setVisibility(View.VISIBLE);
+    }
+
+
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -288,6 +327,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
            }
            else if(ballHitbox[0]<-2.5f){//we won
                Log.d("tag", "You won!!");
+               finishGame();
            }
 
 
