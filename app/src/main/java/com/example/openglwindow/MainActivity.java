@@ -23,17 +23,37 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.widget.EditText;
-import android.widget.Switch;
-import android.widget.TextView;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
     public EditText editBox;
+    public ImageView startIV;
+    public LinearLayout startLL;
+    public LinearLayout finishLL;
     Sensor mMagnetoMeter;
     private Choreographer.FrameCallback frameCallback = null;
     private boolean frameCallbackPending = false;
+
+    float[] moveMatrix={2.3f, 0.15f,0.75f};
+    float movementSpeed=0.001f;
+    float azimuth;
+    float pitch;
+    float roll;
+    float ballScale=0.1f;
+
+    Object[] objects = new Object[11];
+    Camera camera;
+
+    private SensorManager sensorManager;
+    private final float[] accelerometerReading = new float[3];
+    private final float[] magnetometerReading = new float[3];
+
+    private final float[] rotationMatrix = new float[9];
+    private final float[] orientationAngles = new float[3];
 
     public void armVSyncHandler() {
         if(!frameCallbackPending) {
@@ -45,7 +65,34 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     public void doFrame(long frameTimeNanos) {
                         frameCallbackPending = false;
 
-                        //updateFrame();
+                        editBox.setText("Azimuth: "+azimuth+
+                                ",\n Pitch: "+pitch+
+                                ",\n Roll: "+roll);
+
+                        float[] newMatrix = {
+                                1.0f, 0.0f, 0.0f, 0.0f,
+                                0.0f, 1.0f, 0.0f, 0.0f,
+                                0.0f, 0.0f, 1.0f, 0.0f,
+                                moveMatrix[0]+(-movementSpeed*pitch) , 0.15f, moveMatrix[2]+(-movementSpeed*roll), 1.0f
+                        };
+
+                        objects[0].changeTransform(newMatrix);
+
+                        if(checkCollision()){
+                            objects[0].moveObject(new float[]{2.3f, 0.15f,0.75f});
+                            moveMatrix[0]=2.3f;
+                            moveMatrix[2]=0.75f;
+                        }
+                        else{
+                            moveMatrix[0]=moveMatrix[0]+(-movementSpeed*pitch);
+                            moveMatrix[2]=moveMatrix[2]+(-movementSpeed*roll);
+                        }
+
+
+                        //camera
+                        //camera.setCamera(new float[]{1.5f, 0.5f, -0.3f}, new float[]{0f, 0f, 0f});
+                        camera.setCamera(new float[]{0.3f+moveMatrix[0], 0.5f, moveMatrix[2]},
+                                new float[]{moveMatrix[0], 0f, moveMatrix[2]});
 
                         armVSyncHandler();
                     }
@@ -55,8 +102,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
-    Object[] objects = new Object[11];
-    Camera camera;
+
 
     public void setObjects(Object[] newObjects){
         objects = newObjects;
@@ -72,32 +118,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         setContentView(R.layout.activity_main);
 
         sensorManager = (SensorManager) getSystemService(this.SENSOR_SERVICE);
-
+        armVSyncHandler();
         List<Sensor> sensors = sensorManager.getSensorList(Sensor.TYPE_ALL);
 
-//        if (sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null){
-//            Log.d("tag", "accelerometer!!");
-//        } else {
-//            Log.d("tag", "no accelerometer");
-//        }
-//        if (sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD) != null){
-//            Log.d("tag", "magnetic field!!");
-//        } else {
-//            Log.d("tag", "no magnetic field");
-//        }
-
-        //mMagnetoMeter = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-//        Toolbar toolbar = findViewById(R.id.toolbar);
-//        setSupportActionBar(toolbar);
-//
-//        FloatingActionButton fab = findViewById(R.id.fab);
-//        fab.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
-//            }
-//        });
+        sensorManager.unregisterListener(this);
+        startIV=findViewById(R.id.startIV);
+        startLL=findViewById(R.id.startLL);
+        finishLL=findViewById(R.id.finishLL);
 
         editBox = new EditText(this);
         editBox.setText("Hello Matron");
@@ -105,6 +132,32 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         //SensorActivity a=new SensorActivity();
 
         addContentView(editBox, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+    }
+
+    public void onClickStart(View v){
+        startLL.setVisibility(View.INVISIBLE);
+        startIV.setVisibility(View.INVISIBLE);
+        Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        if (accelerometer != null) {
+            sensorManager.registerListener(this, accelerometer,
+                    SensorManager.SENSOR_DELAY_UI, SensorManager.SENSOR_DELAY_UI);
+        }
+        Sensor magneticField = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        if (magneticField != null) {
+            sensorManager.registerListener(this, magneticField,
+                    SensorManager.SENSOR_DELAY_UI, SensorManager.SENSOR_DELAY_UI);
+        }
+
+    }
+
+    public void onClickQuit(View v){
+        finish();
+
+    }
+
+    public void finishGame(){
+        sensorManager.unregisterListener(this);
+        finishLL.setVisibility(View.VISIBLE);
     }
 
     @Override
@@ -129,21 +182,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         return super.onOptionsItemSelected(item);
     }
-
-    private SensorManager sensorManager;
-    private final float[] accelerometerReading = new float[3];
-    private final float[] magnetometerReading = new float[3];
-
-    private final float[] rotationMatrix = new float[9];
-    private final float[] orientationAngles = new float[3];
-
-
-//    @Override
-//    public void onCreate(Bundle savedInstanceState) {
-//        super.onCreate(savedInstanceState);
-//        setContentView(R.layout.activity_main);
-//        sensorManager = (SensorManager) getSystemService(this.SENSOR_SERVICE);
-//    }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
@@ -198,9 +236,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         updateOrientationAngles();
     }
 
-    float[] moveMatrix={2.3f, 0.15f,0.75f};
-    float movementSpeed=0.001f;
-    float ballScale=0.1f;
+
 
     // Compute the three orientation angles based on the most recent readings from
     // the device's accelerometer and magnetometer.
@@ -213,38 +249,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         SensorManager.getOrientation(rotationMatrix, orientationAngles);
         // "mOrientationAngles" now has up-to-date information.
 
-        float azimuth=Math.round((Math.toDegrees(orientationAngles[0])));
-        float pitch=Math.round((Math.toDegrees(orientationAngles[1])));
-        float roll=Math.round((Math.toDegrees(orientationAngles[2])));
-
-        editBox.setText("Azimuth: "+azimuth+
-                ",\n Pitch: "+pitch+
-                ",\n Roll: "+roll);
-
-        float[] newMatrix = {
-                1.0f, 0.0f, 0.0f, 0.0f,
-                0.0f, 1.0f, 0.0f, 0.0f,
-                0.0f, 0.0f, 1.0f, 0.0f,
-                moveMatrix[0]+(-movementSpeed*pitch) , 0.15f, moveMatrix[2]+(-movementSpeed*roll), 1.0f
-        };
-
-        objects[0].changeTransform(newMatrix);
-
-        if(checkCollision()){
-            objects[0].moveObject(new float[]{2.3f, 0.15f,0.75f});
-            moveMatrix[0]=2.3f;
-            moveMatrix[2]=0.75f;
-        }
-        else{
-            moveMatrix[0]=moveMatrix[0]+(-movementSpeed*pitch);
-            moveMatrix[2]=moveMatrix[2]+(-movementSpeed*roll);
-        }
+        azimuth=Math.round((Math.toDegrees(orientationAngles[0])));
+        pitch=Math.round((Math.toDegrees(orientationAngles[1]))) - 6.0f;
+        roll=Math.round((Math.toDegrees(orientationAngles[2]))) + 3.0f;
 
 
-        //camera
-        //camera.setCamera(new float[]{1.5f, 0.5f, -0.3f}, new float[]{0f, 0f, 0f});
-        camera.setCamera(new float[]{0.3f+moveMatrix[0], 0.5f, moveMatrix[2]},
-                new float[]{moveMatrix[0], 0f, moveMatrix[2]});
 
     }
 
@@ -291,6 +300,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
            }
            else if(ballHitbox[0]<-2.5f){//we won
                Log.d("tag", "You won!!");
+               finishGame();
            }
 
 
