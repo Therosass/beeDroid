@@ -33,7 +33,7 @@ public class Object {
 
 
 
-        public void changeTransform(float[] newNumbers){
+    public void changeTransform(float[] newNumbers){
         for(int i = 0; i < 16; i++) {
             transform.mat[i] = newNumbers[i];
         }
@@ -84,6 +84,21 @@ public class Object {
             }
         }
         return maxX - minX;
+    }
+
+    private float findThird(){
+        float minZ = vertices.get(0).pos.z;
+        float maxZ = vertices.get(0).pos.z;
+
+        for(Vertex vertex : vertices){
+            if(vertex.pos.x < minZ){
+                minZ = vertex.pos.z;
+            }
+            if(vertex.pos.x > maxZ){
+                maxZ = vertex.pos.z;
+            }
+        }
+        return maxZ - minZ;
     }
 
     private float findHeight(){

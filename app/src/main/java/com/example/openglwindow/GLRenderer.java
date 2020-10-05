@@ -256,8 +256,8 @@ public class GLRenderer implements GLSurfaceView.Renderer {
             lights[i].specular = new float[]{1.0f,1.0f,1.0f};
             lights[i].diffuse = new float[]{1.0f,0.902f,0.575f};
             lights[i].constant = 1.0f;
-            lights[i].linear = 0.7f;
-            lights[i].quadratic = 1.8f;
+            lights[i].linear = 0.44f;
+            lights[i].quadratic = 0.28f;
         }
         lights[0].position = new float[]{-2.0f,0.1f,-1.0f};
         lights[1].position = new float[]{-2.0f,0.1f,1.0f};

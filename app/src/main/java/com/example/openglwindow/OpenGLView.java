@@ -78,11 +78,11 @@ public class OpenGLView extends GLSurfaceView {
         objects[4].moveObject(new float[]{-2.0f, 0.1f,-1.0f}); // Lampa4
 
         objects[6].moveObject(new float[]{1.7f, 0.0f,0.675f}); // Akadaly1
-        objects[7].moveObject(new float[]{-0.2f, 0.0f,-0.675f}); // Akadaly2
-        objects[8].moveObject(new float[]{-0.65f, 0.0f,0.675f}); // Akadaly3
+        objects[7].moveObject(new float[]{-0.35f, 0.0f,-0.675f}); // Akadaly2
+        objects[8].moveObject(new float[]{-0.8f, 0.0f,0.675f}); // Akadaly3
 
-        objects[9].moveObject(new float[]{0.8f, 0.0f,0.0f}); // Akadaly4
-        objects[10].moveObject(new float[]{-1.5f, 0.0f,-0.65f}); // Akadaly4
+        objects[9].moveObject(new float[]{0.65f, 0.0f,0.0f}); // Akadaly4
+        objects[10].moveObject(new float[]{-1.6f, 0.0f,-0.65f}); // Akadaly4
 
         //objects[3].changeTransform(newMatrix2);
 
