@@ -56,6 +56,20 @@ public class GLRenderer implements GLSurfaceView.Renderer {
 
     private final PointLight[] lights = new PointLight[4];
 
+    private final int[][] locations = new int[][] {
+        {0,0,0},
+        {1,1,1},
+        {1,1,2},
+        {1,1,3},
+        {1,1,4},
+        {5,2,5},
+        {6,2,6},
+        {6,2,7},
+        {6,2,8},
+        {9,2,9},
+        {9,2,10}
+    };
+
     private final String vertexShaderCode =
             "#version 300 es\n\n"+
                     "uniform mat4 mvpMat;\n" +
@@ -69,7 +83,7 @@ public class GLRenderer implements GLSurfaceView.Renderer {
                     "void main()\n" +
                     "{\n" +
                     " gl_Position = mvpMat * ( transformation * vec4(inPosition.xyz, 1.0));\n" +
-                    " v_TexCoordinate = a_TexCoordinate + vec2(transformation[3].x/1.0, transformation[3].z/2.0);\n"+
+                    " v_TexCoordinate = a_TexCoordinate - vec2(transformation[3].x/1.0, transformation[3].z/2.0);\n"+
                     " outNormal = inNormal;\n"+
                     " transPos = vec3(transformation * vec4(inPosition,1.0));\n" +
                     "}  \n";
@@ -286,6 +300,8 @@ public class GLRenderer implements GLSurfaceView.Renderer {
     @Override
     public void onDrawFrame(GL10 gl) {
 
+
+        int [] previousLocations = {5,5,5};
         updateLights();
 
 
@@ -304,37 +320,40 @@ public class GLRenderer implements GLSurfaceView.Renderer {
             int cameraPos = GLES20.glGetUniformLocation(shaderProgram, "cameraPos");
             GLES20.glUniform3fv(cameraPos, 1, camera.getCameraPos(), 0);
 
+
+
             for(int i = 0; i < 11; i++) {
 
                 int mTextureUniformHandle = GLES20.glGetUniformLocation(shaderProgram, "u_Texture");
                 GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-                if (i==0){
-                    GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureDataHandle[0]);
-                }
-                else if(i<=4){
-                    GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureDataHandle[1]);
-                }
-                else{
-                    GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureDataHandle[2]);
-                }
-
-
                 GLES20.glUniform1i(mTextureUniformHandle, 0);
 
-                MVPLocation = GLES20.glGetUniformLocation(shaderProgram, "transformation");
-                GLES20.glUniformMatrix4fv(MVPLocation, 1, false, objectsToRender[i].transform.mat, 0);
 
-                GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, VBOs[i]);
-                GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, IBOs[i]);
 
-                attribLoc = GLES20.glGetAttribLocation(shaderProgram, "inPosition");
-                if (attribLoc == -1) {
-                    System.out.println("Failed to get attrib pos location");
+                if(previousLocations[0] != locations[i][0]) {
+                    previousLocations[0] = locations[i][0];
+                    GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, VBOs[previousLocations[0]]);
+                    GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, IBOs[previousLocations[0]]);
+
                 }
-                GLES20.glVertexAttribPointer(attribLoc, 3, GLES20.GL_FLOAT, false, 36, 0);
-                GLES20.glEnableVertexAttribArray(attribLoc);
+
+                if(previousLocations[1] != locations[i][1]){
+                    previousLocations[1] = locations[i][1];
+                    GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureDataHandle[previousLocations[1]]);
+                }
+
+                if(previousLocations[2] != locations[i][2]) {
+                    previousLocations[2] = locations[i][2];
+                    MVPLocation = GLES20.glGetUniformLocation(shaderProgram, "transformation");
+                    GLES20.glUniformMatrix4fv(MVPLocation, 1, false, objectsToRender[previousLocations[2]].transform.mat, 0);
+                }
+
                 attribLoc = GLES20.glGetAttribLocation(shaderProgram, "a_TexCoordinate");
                 GLES20.glVertexAttribPointer(attribLoc, 2, GLES20.GL_FLOAT, false, 36, 16);
+                GLES20.glEnableVertexAttribArray(attribLoc);
+
+                attribLoc = GLES20.glGetAttribLocation(shaderProgram, "inPosition");
+                GLES20.glVertexAttribPointer(attribLoc, 3, GLES20.GL_FLOAT, false, 36, 0);
                 GLES20.glEnableVertexAttribArray(attribLoc);
 
                 attribLoc = GLES20.glGetAttribLocation(shaderProgram, "inNormal");
@@ -342,9 +361,9 @@ public class GLRenderer implements GLSurfaceView.Renderer {
                 GLES20.glEnableVertexAttribArray(attribLoc);
 
                 GLES20.glDrawElements(GLES20.GL_TRIANGLES, objectsToRender[i].vertices.size(), GLES20.GL_UNSIGNED_INT, 0);
-                GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
-                GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, 0);
             }
+            GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
+            GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, 0);
         }
 
     }

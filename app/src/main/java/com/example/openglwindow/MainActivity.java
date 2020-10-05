@@ -38,6 +38,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private Choreographer.FrameCallback frameCallback = null;
     private boolean frameCallbackPending = false;
 
+    private boolean shouldMove = false;
+
     float[] moveMatrix={2.3f, 0.15f,0.75f};
     float movementSpeed=0.001f;
     float azimuth;
@@ -55,6 +57,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private final float[] rotationMatrix = new float[9];
     private final float[] orientationAngles = new float[3];
 
+    private long lastupdate = 0;
+
     public void armVSyncHandler() {
         if(!frameCallbackPending) {
             frameCallbackPending = true;
@@ -64,36 +68,38 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     @Override
                     public void doFrame(long frameTimeNanos) {
                         frameCallbackPending = false;
+                        //editBox.setText("Azimuth: "+azimuth+
+                        //        ",\n Pitch: "+pitch+
+                        //        ",\n Roll: "+roll);
+                        long updateTime = SystemClock.uptimeMillis() - lastupdate;
+                        lastupdate = SystemClock.uptimeMillis();
+                        editBox.setText(Integer.toString((int)updateTime));
 
-                        editBox.setText("Azimuth: "+azimuth+
-                                ",\n Pitch: "+pitch+
-                                ",\n Roll: "+roll);
+                        movementSpeed = 0.001f * updateTime/70.0f;
 
-                        float[] newMatrix = {
-                                1.0f, 0.0f, 0.0f, 0.0f,
-                                0.0f, 1.0f, 0.0f, 0.0f,
-                                0.0f, 0.0f, 1.0f, 0.0f,
-                                moveMatrix[0]+(-movementSpeed*pitch) , 0.15f, moveMatrix[2]+(-movementSpeed*roll), 1.0f
-                        };
+                        if(shouldMove) {
 
-                        objects[0].changeTransform(newMatrix);
+                            float[] newMatrix = {
+                                    1.0f, 0.0f, 0.0f, 0.0f,
+                                    0.0f, 1.0f, 0.0f, 0.0f,
+                                    0.0f, 0.0f, 1.0f, 0.0f,
+                                    moveMatrix[0] + (movementSpeed * roll), 0.15f, moveMatrix[2] + (-movementSpeed * pitch), 1.0f, 1.0f
+                            };
 
-                        if(checkCollision()){
-                            objects[0].moveObject(new float[]{2.3f, 0.15f,0.75f});
-                            moveMatrix[0]=2.3f;
-                            moveMatrix[2]=0.75f;
+                            objects[0].changeTransform(newMatrix);
+
+                            if (checkCollision()) {
+                                objects[0].moveObject(new float[]{2.3f, 0.15f, 0.75f});
+                                moveMatrix[0] = 2.3f;
+                                moveMatrix[2] = 0.75f;
+                            } else {
+                                moveMatrix[0] = moveMatrix[0] + (movementSpeed * roll);
+                                moveMatrix[2] = moveMatrix[2] + (-movementSpeed* pitch);
+                            }
                         }
-                        else{
-                            moveMatrix[0]=moveMatrix[0]+(-movementSpeed*pitch);
-                            moveMatrix[2]=moveMatrix[2]+(-movementSpeed*roll);
-                        }
 
-
-                        //camera
-                        //camera.setCamera(new float[]{1.5f, 0.5f, -0.3f}, new float[]{0f, 0f, 0f});
-                        camera.setCamera(new float[]{0.3f+moveMatrix[0], 0.5f, moveMatrix[2]},
+                        camera.setCamera(new float[]{0.3f + moveMatrix[0], 0.5f, moveMatrix[2]},
                                 new float[]{moveMatrix[0], 0f, moveMatrix[2]});
-
                         armVSyncHandler();
                     }
                 };
@@ -121,7 +127,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         armVSyncHandler();
         List<Sensor> sensors = sensorManager.getSensorList(Sensor.TYPE_ALL);
 
-        sensorManager.unregisterListener(this);
         startIV=findViewById(R.id.startIV);
         startLL=findViewById(R.id.startLL);
         finishLL=findViewById(R.id.finishLL);
@@ -135,6 +140,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     public void onClickStart(View v){
+        shouldMove = true;
         startLL.setVisibility(View.INVISIBLE);
         startIV.setVisibility(View.INVISIBLE);
         Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -156,6 +162,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     public void finishGame(){
+        shouldMove = false;
         sensorManager.unregisterListener(this);
         finishLL.setVisibility(View.VISIBLE);
     }
@@ -193,6 +200,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     protected void onResume() {
         super.onResume();
+        shouldMove = true;
 
         // Get updates from the accelerometer and magnetometer at a constant rate.
         // To make batch operations more efficient and reduce power consumption,
@@ -216,6 +224,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     protected void onPause() {
         super.onPause();
+        shouldMove = false;
 
         // Don't receive any more updates from either sensor.
         sensorManager.unregisterListener(this);
