@@ -25,6 +25,7 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import java.util.List;
 
@@ -58,6 +59,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private final float[] orientationAngles = new float[3];
 
     private long lastupdate = 0;
+    private long gameStartTime=0;
+    private long gameStopTime=0;
+    private int obstacleHit=0;
 
     public void armVSyncHandler() {
         if(!frameCallbackPending) {
@@ -73,7 +77,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                         //        ",\n Roll: "+roll);
                         long updateTime = SystemClock.uptimeMillis() - lastupdate;
                         lastupdate = SystemClock.uptimeMillis();
-                        editBox.setText(Integer.toString((int)updateTime));
+
+                        int timeInSec=(int)(SystemClock.uptimeMillis()-gameStartTime)/1000;
+                        editBox.setText("Time: "+Integer.toString(timeInSec+obstacleHit*5));
 
                         movementSpeed = 0.001f * updateTime/70.0f;
 
@@ -133,6 +139,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         editBox = new EditText(this);
         editBox.setText("Hello Matron");
+        editBox.setTextColor(0xffFFFFFF);
+        editBox.setVisibility(View.INVISIBLE);
 
         //SensorActivity a=new SensorActivity();
 
@@ -154,6 +162,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     SensorManager.SENSOR_DELAY_UI, SensorManager.SENSOR_DELAY_UI);
         }
 
+        gameStartTime=SystemClock.uptimeMillis();
+        editBox.setVisibility(View.VISIBLE);
+        obstacleHit=0;
+
     }
 
     public void onClickQuit(View v){
@@ -165,6 +177,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         shouldMove = false;
         sensorManager.unregisterListener(this);
         finishLL.setVisibility(View.VISIBLE);
+
+        TextView winTV=findViewById(R.id.winTV);
+        winTV.setText("You won! \n"+ editBox.getText());
+        editBox.setVisibility(View.INVISIBLE);
+
+        gameStopTime=SystemClock.uptimeMillis();
     }
 
     @Override
@@ -305,6 +323,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
            ballHitbox[5]>1.0f || ballHitbox[1]<-1.0f ||
                    ballHitbox[2]>2.5f){
                Log.d("tag", "Collision at "+i+". object "+idx+" "+idx);
+               obstacleHit++;
                return true;
            }
            else if(ballHitbox[0]<-2.5f){//we won
